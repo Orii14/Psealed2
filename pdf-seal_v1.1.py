@@ -11,7 +11,7 @@ import streamlit as st
 
 st.title("📄 Firmar y Sellar PDF")
 
-pdf_path = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
+pdf_path_0 = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
 
 def convertir_paginas_a_imagenes(pdf_path):
     doc = fitz.open(pdf_path)
@@ -73,15 +73,9 @@ def procesar_pdf(pdf_path, salida_pdf):
     imagenes = convertir_paginas_a_imagenes(pdf_path)
     crear_pdf_con_sello(imagenes, salida_pdf)
 
-def seleccionar_pdf():
-    uploaded_file = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
-    if archivo:
-        nombre = os.path.basename(archivo)
-        salida = os.path.join(os.path.dirname(archivo), f"sellado_textual_{nombre}")
-        try:
-            procesar_pdf(archivo, salida)
-            messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Fallo al procesar:\n{e}")
-         
-seleccionar_pdf()
+salida="exitfile.pdf"
+try:
+    procesar_pdf(pdf_path_0, salida)
+    messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
+except Exception as e:
+    messagebox.showerror("Error", f"Fallo al procesar:\n{e}")
