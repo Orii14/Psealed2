@@ -77,5 +77,3 @@ salida="exitfile.pdf"
 try:
     procesar_pdf(pdf_path_0, salida)
     messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
-except Exception as e:
-    messagebox.showerror("Error", f"Fallo al procesar:\n{e}")
