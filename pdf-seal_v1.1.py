@@ -74,6 +74,4 @@ def procesar_pdf(pdf_path, salida_pdf):
     crear_pdf_con_sello(imagenes, salida_pdf)
 
 salida="exitfile.pdf"
-try:
-    procesar_pdf(pdf_path_0, salida)
-    messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
+procesar_pdf(pdf_path_0, salida)
