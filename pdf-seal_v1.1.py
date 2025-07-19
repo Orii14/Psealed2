@@ -83,3 +83,5 @@ def seleccionar_pdf():
             messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
         except Exception as e:
             messagebox.showerror("Error", f"Fallo al procesar:\n{e}")
+         
+seleccionar_pdf()
