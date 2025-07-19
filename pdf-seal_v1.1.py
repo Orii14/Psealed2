@@ -9,51 +9,49 @@ import fitz  # PyMuPDF
 from io import BytesIO
 import streamlit as st
 
-st.title("📄 Firmar y Sellar PDF")
+def convertir_paginas_a_imagenes(pdf_path):
+    doc = fitz.open(pdf_path)
+    imagenes = []
 
-uploaded_file = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
+    for page in doc:
+        pix = page.get_pixmap(dpi=150)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        imagenes.append(img)
 
-if uploaded_file is not None:
-    # Guardar PDF subido en memoria
-    pdf_bytes = uploaded_file.read()
+    return imagenes
 
-    # Abrir PDF con PyMuPDF desde memoria
-    pdf = fitz.open(stream=pdf_bytes, filetype="pdf")
+def crear_pdf_con_sello(imagenes, texto_sello="PDF SEALED ✓"):
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
 
-    # Ruta del sello (puedes cambiar esto o permitir que el usuario lo suba también)
-    sello_path = "sello.png"
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    if not os.path.isfile(sello_path):
-        st.error("⚠️ No se encontró el archivo 'sello.png'")
-    else:
-        # Cargar sello como imagen
-        sello_image = Image.open(sello_path)
-        sello_bytes = BytesIO()
-        sello_image.save(sello_bytes, format="PNG")
-        sello_bytes.seek(0)
-        sello_reader = ImageReader(sello_bytes)
+    for img in imagenes:
+        # Redimensionar imagen al tamaño de la página (A4)
+        img_io = BytesIO()
+        img.save(img_io, format='PNG')
+        img_io.seek(0)
+        image_reader = ImageReader(img_io)
 
-        # Crear nuevo PDF con ReportLab
-        output = BytesIO()
-        c = canvas.Canvas(output, pagesize=A4)
+        page_width, page_height = A4
+        img_width, img_height = img.size
+        aspect = img_height / img_width
 
-        # Agregar sello y fecha en cada página
-        for page_num in range(len(pdf)):
-            c.drawImage(sello_reader, A4[0] - 2 * inch, inch, width=1 * inch, height=1 * inch)
+        scaled_width = page_width
+        scaled_height = page_width * aspect
 
-            fecha = datetime.now().strftime("%d/%m/%Y %H:%M")
-            c.setFont("Helvetica", 10)
-            c.drawString(0.75 * inch, inch, f"Firmado el {fecha}")
+        if scaled_height > page_height:
+            scaled_height = page_height
+            scaled_width = page_height / aspect
 
-            c.showPage()
+        x = (page_width - scaled_width) / 2
+        y = (page_height - scaled_height) / 2
 
-        c.save()
+        c.drawImage(image_reader, x, y, width=scaled_width, height=scaled_height)
 
-        # Mostrar y ofrecer descarga
-        st.success("✅ PDF procesado con sello y fecha")
-        st.download_button(
-            label="📥 Descargar PDF sellado",
-            data=output.getvalue(),
-            file_name="pdf_sellado.pdf",
-            mime="application/pdf"
-        )
+        # Añadir sello real (texto vectorial)
+        c.setFont("Helvetica-Bold", 22)
+        c.setFillColorRGB(1, 0, 0)  # rojo
+        c.drawString(340, 40, texto_sello)
+
+        # Fecha debajo del sello
