@@ -9,6 +9,10 @@ import fitz  # PyMuPDF
 from io import BytesIO
 import streamlit as st
 
+st.title("📄 Firmar y Sellar PDF")
+
+pdf_path = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
+
 def convertir_paginas_a_imagenes(pdf_path):
     doc = fitz.open(pdf_path)
     imagenes = []
@@ -20,7 +24,7 @@ def convertir_paginas_a_imagenes(pdf_path):
 
     return imagenes
 
-def crear_pdf_con_sello(imagenes, texto_sello="PDF SEALED ✓"):
+def crear_pdf_con_sello(imagenes, salida_pdf, texto_sello="PDF SEALED ✓"):
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
 
@@ -52,6 +56,30 @@ def crear_pdf_con_sello(imagenes, texto_sello="PDF SEALED ✓"):
         # Añadir sello real (texto vectorial)
         c.setFont("Helvetica-Bold", 22)
         c.setFillColorRGB(1, 0, 0)  # rojo
-        c.drawString(340, 40, texto_sello)
+        c.drawString(340, 40, texto_sello) #modificar
 
         # Fecha debajo del sello
+        c.setFont("Helvetica", 10)
+        c.setFillColorRGB(0, 0, 0)
+        c.drawString(340, 30, fecha)
+
+        c.showPage()
+
+    c.save()
+    with open(salida_pdf, "wb") as f:
+        f.write(buffer.getvalue())
+
+def procesar_pdf(pdf_path, salida_pdf):
+    imagenes = convertir_paginas_a_imagenes(pdf_path)
+    crear_pdf_con_sello(imagenes, salida_pdf)
+
+def seleccionar_pdf():
+    archivo = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+    if archivo:
+        nombre = os.path.basename(archivo)
+        salida = os.path.join(os.path.dirname(archivo), f"sellado_textual_{nombre}")
+        try:
+            procesar_pdf(archivo, salida)
+            messagebox.showinfo("Éxito", f"PDF sellado creado:\n{salida}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Fallo al procesar:\n{e}")
