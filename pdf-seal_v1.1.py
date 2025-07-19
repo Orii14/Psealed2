@@ -74,7 +74,7 @@ def procesar_pdf(pdf_path, salida_pdf):
     crear_pdf_con_sello(imagenes, salida_pdf)
 
 def seleccionar_pdf():
-    archivo = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+    uploaded_file = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
     if archivo:
         nombre = os.path.basename(archivo)
         salida = os.path.join(os.path.dirname(archivo), f"sellado_textual_{nombre}")
