@@ -11,10 +11,10 @@ import streamlit as st
 
 st.title("📄 Firmar y Sellar PDF")
 
-pdf_path_0 = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
+pdf_file = st.file_uploader("Selecciona un archivo PDF", type=["pdf"])
 
-def convertir_paginas_a_imagenes(pdf_path):
-    doc = fitz.open(pdf_path)
+def convertir_paginas_a_imagenes(pdf_bytes):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     imagenes = []
 
     for page in doc:
@@ -24,7 +24,7 @@ def convertir_paginas_a_imagenes(pdf_path):
 
     return imagenes
 
-def crear_pdf_con_sello(imagenes, salida_pdf, texto_sello="PDF SEALED ✓"):
+def crear_pdf_con_sello(imagenes, texto_sello="PDF SEALED ✓"):
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
 
@@ -56,7 +56,7 @@ def crear_pdf_con_sello(imagenes, salida_pdf, texto_sello="PDF SEALED ✓"):
         # Añadir sello real (texto vectorial)
         c.setFont("Helvetica-Bold", 22)
         c.setFillColorRGB(1, 0, 0)  # rojo
-        c.drawString(340, 40, texto_sello) #modificar
+        c.drawString(340, 40, texto_sello)
 
         # Fecha debajo del sello
         c.setFont("Helvetica", 10)
@@ -66,12 +66,17 @@ def crear_pdf_con_sello(imagenes, salida_pdf, texto_sello="PDF SEALED ✓"):
         c.showPage()
 
     c.save()
-    with open(salida_pdf, "wb") as f:
-        f.write(buffer.getvalue())
+    buffer.seek(0)
+    return buffer
 
-def procesar_pdf(pdf_path, salida_pdf):
-    imagenes = convertir_paginas_a_imagenes(pdf_path)
-    crear_pdf_con_sello(imagenes, salida_pdf)
+if pdf_file:
+    pdf_bytes = pdf_file.read()
+    images = convertir_paginas_a_imagenes(pdf_bytes)
+    pdf_output_buffer = crear_pdf_con_sello(images)
 
-salida="exitfile.pdf"
-procesar_pdf(pdf_path_0, salida)
+    st.download_button(
+        label="Descargar PDF sellado",
+        data=pdf_output_buffer,
+        file_name="pdf_selled.pdf",
+        mime="application/pdf"
+    )
